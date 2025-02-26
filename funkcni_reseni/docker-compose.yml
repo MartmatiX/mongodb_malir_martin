@@ -1,0 +1,88 @@
+version: '3.8'
+services:
+  config-server:
+    image: mongo:latest
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile
+    container_name: config-server
+    command: mongod --port 27017 --configsvr --replSet config-server --bind_ip_all --keyFile /etc/mongo-keyfile
+    volumes:
+      - ./scripts:/scripts
+      - mongodb_cluster_config-server_db:/data/db
+      - mongodb_cluster_config-server_config:/data/configdb
+    ports:
+      - 27018:27017
+
+  shard-primary:
+    image: mongo:latest
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile
+    container_name: shard-primary
+    command: mongod --port 27017 --shardsvr --replSet shard-primary --bind_ip_all --keyFile /etc/mongo-keyfile
+    volumes:
+      - ./scripts:/scripts
+      - mongodb_cluster_shard-primary_db:/data/db
+      - mongodb_cluster_shard-primary_config:/data/configdb
+    ports:
+      - 27020:27017
+
+  shard-secondary:
+    image: mongo:latest
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile
+    container_name: shard-secondary
+    command: mongod --port 27017 --shardsvr --replSet shard-primary --bind_ip_all --keyFile /etc/mongo-keyfile
+    volumes:
+      - ./scripts:/scripts
+      - mongodb_cluster_shard-secondary_db:/data/db
+      - mongodb_cluster_shard-secondary_config:/data/configdb
+    ports:
+      - 27021:27017
+
+  shard-tertiary:
+    image: mongo:latest
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile
+    container_name: shard-tertiary
+    command: mongod --port 27017 --shardsvr --replSet shard-primary --bind_ip_all --keyFile /etc/mongo-keyfile
+    volumes:
+      - ./scripts:/scripts
+      - mongodb_cluster_shard-tertiary_db:/data/db
+      - mongodb_cluster_shard-tertiary_config:/data/configdb
+    ports:
+      - 27022:27017
+
+  router:
+    image: mongo:latest
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile
+    container_name: router
+    command: mongos --port 27017 --configdb config-server/config-server:27017 --bind_ip_all --keyFile /etc/mongo-keyfile
+    ports:
+      - 27017:27017
+    volumes:
+      - ./scripts:/scripts
+      - mongodb_cluster_router_db:/data/db
+      - mongodb_cluster_router_config:/data/configdb
+    depends_on:
+      - config-server
+      - shard-primary
+      - shard-secondary
+      - shard-tertiary
+
+volumes:
+  mongodb_cluster_router_db:
+  mongodb_cluster_router_config:
+  mongodb_cluster_config-server_db:
+  mongodb_cluster_config-server_config:
+  mongodb_cluster_shard-primary_db:
+  mongodb_cluster_shard-primary_config:
+  mongodb_cluster_shard-secondary_db:
+  mongodb_cluster_shard-secondary_config:
+  mongodb_cluster_shard-tertiary_db:
+  mongodb_cluster_shard-tertiary_config:

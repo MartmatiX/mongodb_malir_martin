@@ -1,0 +1,16 @@
+https://gist.github.com/armgilles/194bcff35001e7eb53a2a8b441e8b2c6#file-pokemon-csv
+https://www.mongodb.com/docs/manual/core/sharded-cluster-config-servers/
+https://www.mongodb.com/docs/manual/reference/program/mongos/#mongodb-binary-bin.mongos
+https://hub.docker.com/_/mongo
+https://www.mongodb.com/docs/manual/tutorial/enforce-keyfile-access-control-in-existing-replica-set/
+https://github.com/minhhungit/mongodb-cluster-docker-compose/blob/master/docker-compose.yml
+https://stackoverflow.com/questions/11571273/in-mongo-what-is-the-difference-between-sharding-and-replication
+https://www.mongodb.com/docs/manual/sharding/#sharding-internals-shard-keys
+https://www.mongodb.com/docs/manual/sharding/#sharding-internals-shard-keys
+https://www.mongodb.com/docs/manual/tutorial/list-users/
+https://www.mongodb.com/docs/manual/reference/method/db.getUsers/
+https://www.mongodb.com/docs/manual/tutorial/authenticate-a-user/
+https://www.mongodb.com/docs/manual/reference/method/db.auth/
+https://www.mongodb.com/docs/manual/reference/command/ping/
+https://www.mongodb.com/docs/atlas/data-federation/query/sql/schema/create/
+https://www.mongodb.com/resources/products/fundamentals/clusters
