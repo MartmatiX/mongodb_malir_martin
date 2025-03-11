@@ -14,3 +14,5 @@ https://www.mongodb.com/docs/manual/reference/method/db.auth/
 https://www.mongodb.com/docs/manual/reference/command/ping/
 https://www.mongodb.com/docs/atlas/data-federation/query/sql/schema/create/
 https://www.mongodb.com/resources/products/fundamentals/clusters
+https://stackoverflow.com/questions/11292215/where-does-mongodb-stand-in-the-cap-theorem
+https://www.mongodb.com/docs/manual/replication/
