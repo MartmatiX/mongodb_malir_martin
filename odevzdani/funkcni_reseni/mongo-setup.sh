@@ -1,8 +1,10 @@
 #!/bin/bash
 
 # Variables
-SLEEP=10
-SLEEP_CLEAR=30
+SLEEP=5
+SLEEP_CLEAR=10
+
+pokemon_csv="../data/pokemon.csv"
 
 # Initial Greetings
 echo "Hello, You Just Started A MongoDB Initialization Script"
@@ -89,8 +91,75 @@ echo "-------------------------------------------------"
 
 echo "MongoDB Sharding Setup Completed!"
 
-echo "To Connect To The Database Please Use:"
+# Create Validation Schema And Import Pokemon Data From CSV File
+echo "The Thread Will Now Sleep For $SLEEP Seconds Before The Data Are Imported"
+sleep $SLEEP
+echo "Creating Validation Schema For The Dataset..."
+docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval 'use nosql_project;'
+docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval 'db.getSiblingDB("nosql_project").pokemon.insertOne({ test: "data" });'
+docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval '
+db.getSiblingDB("nosql_project").runCommand({
+  collMod: "pokemon",
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["#", "Name", "Type 1", "Total", "HP", "Attack", "Defense", "Sp", "Speed", "Generation", "Legendary"],
+      properties: {
+        "#": { bsonType: "int", description: "Pokédex number, must be an integer and required." },
+        Name: { bsonType: "string", description: "Pokémon name, required." },
+        "Type 1": { bsonType: "string", description: "Primary type of the Pokémon, required." },
+        "Type 2": { bsonType: ["string", "null"], description: "Secondary type of the Pokémon, optional." },
+        Total: { bsonType: "int", description: "Total base stats, must be an integer." },
+        HP: { bsonType: "int", minimum: 1, description: "HP stat, must be an integer and at least 1." },
+        Attack: { bsonType: "int", minimum: 1, description: "Attack stat, must be an integer and at least 1." },
+        Defense: { bsonType: "int", minimum: 1, description: "Defense stat, must be an integer and at least 1." },
+        Sp: {
+          bsonType: "object",
+          required: [" Atk", " Def"],
+          properties: {
+            " Atk": { bsonType: "int", minimum: 1, description: "Special Attack stat, must be an integer and at least 1." },
+            " Def": { bsonType: "int", minimum: 1, description: "Special Defense stat, must be an integer and at least 1." }
+          },
+          description: "Special Attack and Special Defense, stored as a nested object."
+        },
+        Speed: { bsonType: "int", minimum: 1, description: "Speed stat, must be an integer and at least 1." },
+        Generation: { bsonType: "int", minimum: 1, description: "Game generation, must be an integer." },
+        Legendary: { bsonType: "string", description: "Indicates if the Pokémon is legendary (true/false)." }
+      }
+    }
+  },
+  validationLevel: "strict",
+  validationAction: "error"
+});
+'
+echo "Validation Schema Created"
+echo "The Thread Will Now Sleep For $SLEEP Seconds"
+echo "-------------------------------------------------"
+sleep $SLEEP
+
+echo "Importing Data From The pokemon.csv File Into MongoDB..."
+docker exec -i router mongoimport --host router --db nosql_project --collection pokemon --type csv --headerline --authenticationDatabase admin -u admin -p password < "$pokemon_csv"
+docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval 'db.getSiblingDB("nosql_project").pokemon.deleteOne({ test: "data" });'
+
+echo "Pokemon Data Imported Into The Database"
+echo "The Thread Will Now Sleep For $SLEEP Seconds"
+
+echo "-------------------------------------------------"
+
+echo "FULL INITIALIZATION FINISHED"
+
+echo "-------------------------------------------------"
+
+echo "To Connect To The Database, Please Use:"
 echo "docker exec -it router mongosh --authenticationDatabase 'admin' -u 'admin' -p 'password'"
+echo "To Show All Databases, Please Use:"
+echo "db.adminCommand( { listDatabases: 1 } )"
+echo "To Switch To One Of The Databases, Please Use:"
+echo "use <database_name>"
+echo "To Show Database Collections, Please Use:"
+echo "show collections"
+echo "To List A Few Lines Of Data, Please Use:"
+echo "db.<schema_name>.find().limit(<number_of_records>)"
 echo "-------------------------------------------------"
 echo "To Stop All Containers, Please Use:"
 echo "docker compose down"
