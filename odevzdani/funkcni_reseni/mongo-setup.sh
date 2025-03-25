@@ -5,6 +5,7 @@ SLEEP=5
 SLEEP_CLEAR=10
 
 pokemon_csv="../data/pokemon.csv"
+games_csv="../data/vgsales_cleaned.csv"
 
 # Initial Greetings
 echo "Hello, You Just Started A MongoDB Initialization Script"
@@ -94,7 +95,7 @@ echo "MongoDB Sharding Setup Completed!"
 # Create Validation Schema And Import Pokemon Data From CSV File
 echo "The Thread Will Now Sleep For $SLEEP Seconds Before The Data Are Imported"
 sleep $SLEEP
-echo "Creating Validation Schema For The Dataset..."
+echo "Creating Validation Schema For The Pokemon Dataset..."
 docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval 'use nosql_project;'
 docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval 'db.getSiblingDB("nosql_project").pokemon.insertOne({ test: "data" });'
 docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval '
@@ -144,6 +145,51 @@ docker exec -it router mongosh --authenticationDatabase admin -u admin -p passwo
 echo "Pokemon Data Imported Into The Database"
 echo "The Thread Will Now Sleep For $SLEEP Seconds"
 
+echo "Creating Validation Schema For The Video Games Sales Dataset..."
+docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval 'db.getSiblingDB("nosql_project").games.insertOne({ test: "data" });'
+docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval '
+db.getSiblingDB("nosql_project").runCommand({
+  collMod: "games",
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["Rank", "Name", "Platform", "Year", "Genre", "Publisher", "NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales", "Global_Sales"],
+      properties: {
+        Rank: { bsonType: "int", description: "Rank of the game, must be an integer and required." },
+        Name: { bsonType: "string", description: "Name of the game, required." },
+        Platform: { bsonType: "string", description: "Platform on which the game was released, required." },
+        Year: { bsonType: [ "int", "null" ], description: "Year of release, must be an integer and required." },
+        Genre: { bsonType: "string", description: "Genre of the game, required." },
+        Publisher: { bsonType: [ "string", "null" ], description: "Publisher of the game, required." },
+        NA_Sales: { bsonType: "double", description: "Sales in North America, must be a non-negative number." },
+        EU_Sales: { bsonType: "double", description: "Sales in Europe, must be a non-negative number." },
+        JP_Sales: { bsonType: "double", description: "Sales in Japan, must be a non-negative number." },
+        Other_Sales: { bsonType: "double", description: "Sales in other regions, must be a non-negative number." },
+        Global_Sales: { bsonType: "double", description: "Total global sales, must be a non-negative number." }
+      }
+    }
+  },
+  validationLevel: "strict",
+  validationAction: "error"
+});
+'
+echo "Validation Schema Created"
+echo "The Thread Will Now Sleep For $SLEEP Seconds"
+echo "-------------------------------------------------"
+sleep $SLEEP
+
+echo "Cleaning The Dataset For Video Games Sales"
+(cd ../data && python3 ../data/vgSalesCleaner.py)
+echo "Output Saved To 'vgsales_cleaned.csv' File"
+cd ../funkcni_reseni
+
+echo "Importing Data From The vgsales.csv File Into MongoDB..."
+docker exec -i router mongoimport --host router --db nosql_project --collection games --type csv --headerline --authenticationDatabase admin -u admin -p password < "$games_csv"
+docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval 'db.getSiblingDB("nosql_project").games.deleteOne({ test: "data" });'
+
+echo "Video Games Data Imported Into The Database"
+echo "The Thread Will Now Sleep For $SLEEP Seconds"
+
 echo "-------------------------------------------------"
 
 echo "FULL INITIALIZATION FINISHED"
@@ -155,12 +201,16 @@ echo "docker exec -it router mongosh --authenticationDatabase 'admin' -u 'admin'
 echo "To Show All Databases, Please Use:"
 echo "db.adminCommand( { listDatabases: 1 } )"
 echo "To Switch To One Of The Databases, Please Use:"
-echo "use <database_name>"
+echo "use <database_name> | Database 'nosql_project' Is The Main One"
 echo "To Show Database Collections, Please Use:"
 echo "show collections"
 echo "To List A Few Lines Of Data, Please Use:"
 echo "db.<schema_name>.find().limit(<number_of_records>)"
+echo "To View Validation Schemas, Please Use:"
+echo "db.getCollectionInfos( { name: '<schema_name>' } )[0].options.validator"
+
 echo "-------------------------------------------------"
+
 echo "To Stop All Containers, Please Use:"
 echo "docker compose down"
 echo "If You Wish To Also Remove The Containers, Please Use:"
