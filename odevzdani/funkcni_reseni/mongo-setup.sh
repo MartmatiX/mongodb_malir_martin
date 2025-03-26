@@ -6,6 +6,7 @@ SLEEP_CLEAR=10
 
 pokemon_csv="../data/pokemon.csv"
 games_csv="../data/vgsales_cleaned.csv"
+healthcare_csv="../data/healthcare_cleaned.csv"
 
 # Initial Greetings
 echo "Hello, You Just Started A MongoDB Initialization Script"
@@ -184,12 +185,60 @@ echo "Cleaning The Dataset For Video Games Sales"
 echo "Output Saved To 'vgsales_cleaned.csv' File"
 cd ../funkcni_reseni
 
-echo "Importing Data From The vgsales.csv File Into MongoDB..."
+echo "Importing Data From The vgsales_cleaned.csv File Into MongoDB..."
 docker exec -i router mongoimport --host router --db nosql_project --collection games --type csv --headerline --authenticationDatabase admin -u admin -p password < "$games_csv"
 docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval 'db.getSiblingDB("nosql_project").games.deleteOne({ test: "data" });'
 
 echo "Video Games Data Imported Into The Database"
 echo "The Thread Will Now Sleep For $SLEEP Seconds"
+
+echo "Creating Validation Schema For The Healthcare Dataset..."
+docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval 'db.getSiblingDB("nosql_project").healthcare.insertOne({ test: "data" });'
+docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval '
+db.getSiblingDB("nosql_project").runCommand({
+  collMod: "healthcare",
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["Name", "Age", "Gender", "Blood Type", "Medical Condition", "Date of Admission", "Doctor", "Hospital", "Insurance Provider", "Billing Amount", "Room Number", "Admission Type", "Discharge Date", "Medication", "Test Results"],
+      properties: {
+        Name: { bsonType: "string", description: "Name of the patient, required." },
+        Age: { bsonType: "int", description: "Age of the patient, must be an integer and required." },
+        Gender: { bsonType: "string", description: "Gender of the patient, must be either Male or Female." },
+        "Blood Type": { bsonType: "string", description: "Blood type of the patient, must be one of the specified types." },
+        "Medical Condition": { bsonType: "string", description: "Medical condition of the patient, required." },
+        "Date of Admission": { bsonType: "string", description: "Date of patient admission, required." },
+        Doctor: { bsonType: "string", description: "Attending doctors name, required." },
+        Hospital: { bsonType: "string", description: "Hospital name where the patient was admitted, required." },
+        "Insurance Provider": { bsonType: "string", description: "Insurance provider covering the patient, required." },
+        "Billing Amount": { bsonType: "double", description: "Billing amount for the patients treatment, must be a non-negative number." },
+        "Room Number": { bsonType: "int", description: "Room number where the patient was accommodated, required." },
+        "Admission Type": { bsonType: "string", description: "Type of admission, must be one of Urgent, Emergency, or Elective." },
+        "Discharge Date": { bsonType: "string", description: "Date of patient discharge, required." },
+        Medication: { bsonType: "string", description: "Medication prescribed to the patient during admission." },
+        "Test Results": { bsonType: "string", description: "Results of tests conducted during the patients admission, must be one of Normal, Inconclusive, or Abnormal." }
+      }
+    }
+  },
+  validationLevel: "strict",
+  validationAction: "error"
+});
+'
+echo "Validation Schema Created"
+echo "The Thread Will Now Sleep For $SLEEP Seconds"
+echo "-------------------------------------------------"
+sleep $SLEEP
+
+echo "Cleaning The Dataset For Healthcare Dataset Sales"
+(cd ../data && python3 ../data/healthCleaner.py)
+echo "Output Saved To 'vgsales_cleaned.csv' File"
+cd ../funkcni_reseni
+
+echo "Importing Data From The healthcare.csv File Into MongoDB..."
+docker exec -i router mongoimport --host router --db nosql_project --collection healthcare --type csv --headerline --authenticationDatabase admin -u admin -p password < "$healthcare_csv"
+docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval 'db.getSiblingDB("nosql_project").healthcare.deleteOne({ test: "data" });'
+
+echo "Healthcare Data Imported Into The Database"
 
 echo "-------------------------------------------------"
 
