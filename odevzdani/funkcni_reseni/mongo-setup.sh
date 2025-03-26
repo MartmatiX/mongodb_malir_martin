@@ -30,6 +30,7 @@ sleep $SLEEP
 
 # Startup Of The Containers
 echo "Starting The Containers..."
+docker compose build --no-cache
 docker compose up -d
 echo "Containers Started, The Thread Will Now Sleep For $SLEEP_CLEAR Seconds So Everything Can Start Properly..."
 sleep $SLEEP_CLEAR
