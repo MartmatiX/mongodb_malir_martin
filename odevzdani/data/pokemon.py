@@ -47,8 +47,8 @@ if __name__ == "__main__":
 
     # Průměrné statistiky podle generace
     generation_stats = read.groupby('Generation').mean(numeric_only=True)
-    generation_stats[['Total', 'HP', 'Attack', 'Defense', 'Sp. Atk', 'Sp. Def', 'Speed']].plot(kind='bar',
-                                                                                               figsize=(12, 6))
+    generation_stats[['HP', 'Attack', 'Defense', 'Sp. Atk', 'Sp. Def', 'Speed']].plot(kind='bar',
+                                                                                      figsize=(12, 6))
     plt.title('Prumerne statistiky Pokemonu podle generace')
     plt.xlabel('Generace')
     plt.ylabel('Hodnota')
