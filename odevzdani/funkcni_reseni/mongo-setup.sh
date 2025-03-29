@@ -155,24 +155,24 @@ db.getSiblingDB("nosql_project").runCommand({
   validator: {
     $jsonSchema: {
       bsonType: "object",
-      required: ["Rank", "Name", "Platform", "Year", "Genre", "Publisher", "NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales", "Global_Sales"],
+      required: ["Rank", "Name", "Platform", "Genre", "NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales", "Global_Sales"],
       properties: {
         Rank: { bsonType: "int", description: "Rank of the game, must be an integer and required." },
         Name: { bsonType: "string", description: "Name of the game, required." },
         Platform: { bsonType: "string", description: "Platform on which the game was released, required." },
-        Year: { bsonType: [ "int", "null" ], description: "Year of release, must be an integer and required." },
+        Year: { bsonType: "int", description: "Year of release, must be an integer and required." },
         Genre: { bsonType: "string", description: "Genre of the game, required." },
-        Publisher: { bsonType: [ "string", "null" ], description: "Publisher of the game, required." },
-        NA_Sales: { bsonType: "double", description: "Sales in North America, must be a non-negative number." },
-        EU_Sales: { bsonType: "double", description: "Sales in Europe, must be a non-negative number." },
-        JP_Sales: { bsonType: "double", description: "Sales in Japan, must be a non-negative number." },
-        Other_Sales: { bsonType: "double", description: "Sales in other regions, must be a non-negative number." },
-        Global_Sales: { bsonType: "double", description: "Total global sales, must be a non-negative number." }
+        Publisher: { bsonType: "string", description: "Publisher of the game, required." },
+        NA_Sales: { bsonType: "double", minimum:0, description: "Sales in North America, must be a non-negative number." },
+        EU_Sales: { bsonType: "double", minimum:0, description: "Sales in Europe, must be a non-negative number." },
+        JP_Sales: { bsonType: "double", minimum:0, description: "Sales in Japan, must be a non-negative number." },
+        Other_Sales: { bsonType: "double", minimum:0, description: "Sales in other regions, must be a non-negative number." },
+        Global_Sales: { bsonType: "double", minimum:0, description: "Total global sales, must be a non-negative number." }
       }
     }
   },
   validationLevel: "strict",
-  validationAction: "error"
+  validationAction: "warn"
 });
 '
 echo "Validation Schema Created"
