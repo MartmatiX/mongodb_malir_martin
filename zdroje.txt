@@ -17,6 +17,9 @@ https://www.mongodb.com/resources/products/fundamentals/clusters
 https://stackoverflow.com/questions/11292215/where-does-mongodb-stand-in-the-cap-theorem
 https://www.mongodb.com/docs/manual/replication/
 https://www.mongodb.com/docs/manual/reference/method/Date/
+https://www.mongodb.com/solutions/customer-case-studies/loreal
+https://www.mongodb.com/solutions/customer-case-studies/shutterfly
+https://www.mongodb.com/solutions/customer-case-studies/current
 
 DATA:
 https://gist.github.com/armgilles/194bcff35001e7eb53a2a8b441e8b2c6
