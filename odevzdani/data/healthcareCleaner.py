@@ -1,16 +1,18 @@
 import pandas as pd
 
 
-def clean_csv(input_file, output_file):
+def clean_csv_to_json(input_file, output_file):
     df = pd.read_csv(input_file)
 
-    df["Date of Admission"] = pd.to_datetime(df["Date of Admission"], errors="coerce").dt.strftime('%Y-%m-%dT%H:%M:%SZ')
-    df["Discharge Date"] = pd.to_datetime(df["Discharge Date"], errors="coerce").dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+    # Convert dates to proper datetime format
+    df["Date of Admission"] = pd.to_datetime(df["Date of Admission"], errors="coerce")
+    df["Discharge Date"] = pd.to_datetime(df["Discharge Date"], errors="coerce")
 
-    df.to_csv(output_file, index=False)
+    # Convert DataFrame to JSON
+    df.to_json(output_file, orient="records", date_format="iso")
 
 
 if __name__ == "__main__":
     input_file = "healthcare.csv"
-    output_file = "healthcare_cleaned.csv"
-    clean_csv(input_file, output_file)
+    output_file = "healthcare_cleaned.json"
+    clean_csv_to_json(input_file, output_file)
