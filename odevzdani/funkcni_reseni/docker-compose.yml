@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   config-server:
     image: mongo:latest
@@ -14,47 +15,131 @@ services:
     ports:
       - 27018:27017
 
-  shard-primary:
+  shard-1-primary:
     image: mongo:latest
     build:
       context: ./scripts
       dockerfile: Dockerfile
-    container_name: shard-primary
-    command: mongod --port 27017 --shardsvr --replSet shard-primary --bind_ip_all --keyFile /etc/mongo-keyfile
+    container_name: shard-1-primary
+    command: mongod --port 27017 --shardsvr --replSet shard1 --bind_ip_all --keyFile /etc/mongo-keyfile
     volumes:
       - ./scripts:/scripts
-      - mongodb_cluster_shard-primary_db:/data/db
-      - mongodb_cluster_shard-primary_config:/data/configdb
+      - mongodb_cluster_shard-1-primary_db:/data/db
+      - mongodb_cluster_shard-1-primary_config:/data/configdb
     ports:
       - 27020:27017
 
-  shard-secondary:
+  shard-1-secondary:
     image: mongo:latest
     build:
       context: ./scripts
       dockerfile: Dockerfile
-    container_name: shard-secondary
-    command: mongod --port 27017 --shardsvr --replSet shard-primary --bind_ip_all --keyFile /etc/mongo-keyfile
+    container_name: shard-1-secondary
+    command: mongod --port 27017 --shardsvr --replSet shard1 --bind_ip_all --keyFile /etc/mongo-keyfile
     volumes:
       - ./scripts:/scripts
-      - mongodb_cluster_shard-secondary_db:/data/db
-      - mongodb_cluster_shard-secondary_config:/data/configdb
+      - mongodb_cluster_shard-1-secondary_db:/data/db
+      - mongodb_cluster_shard-1-secondary_config:/data/configdb
     ports:
       - 27021:27017
 
-  shard-tertiary:
+  shard-1-tertiary:
     image: mongo:latest
     build:
       context: ./scripts
       dockerfile: Dockerfile
-    container_name: shard-tertiary
-    command: mongod --port 27017 --shardsvr --replSet shard-primary --bind_ip_all --keyFile /etc/mongo-keyfile
+    container_name: shard-1-tertiary
+    command: mongod --port 27017 --shardsvr --replSet shard1 --bind_ip_all --keyFile /etc/mongo-keyfile
     volumes:
       - ./scripts:/scripts
-      - mongodb_cluster_shard-tertiary_db:/data/db
-      - mongodb_cluster_shard-tertiary_config:/data/configdb
+      - mongodb_cluster_shard-1-tertiary_db:/data/db
+      - mongodb_cluster_shard-1-tertiary_config:/data/configdb
     ports:
       - 27022:27017
+
+  shard-2-primary:
+    image: mongo:latest
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile
+    container_name: shard-2-primary
+    command: mongod --port 27017 --shardsvr --replSet shard2 --bind_ip_all --keyFile /etc/mongo-keyfile
+    volumes:
+      - ./scripts:/scripts
+      - mongodb_cluster_shard-2-primary_db:/data/db
+      - mongodb_cluster_shard-2-primary_config:/data/configdb
+    ports:
+      - 27023:27017
+
+  shard-2-secondary:
+    image: mongo:latest
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile
+    container_name: shard-2-secondary
+    command: mongod --port 27017 --shardsvr --replSet shard2 --bind_ip_all --keyFile /etc/mongo-keyfile
+    volumes:
+      - ./scripts:/scripts
+      - mongodb_cluster_shard-2-secondary_db:/data/db
+      - mongodb_cluster_shard-2-secondary_config:/data/configdb
+    ports:
+      - 27024:27017
+
+  shard-2-tertiary:
+    image: mongo:latest
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile
+    container_name: shard-2-tertiary
+    command: mongod --port 27017 --shardsvr --replSet shard2 --bind_ip_all --keyFile /etc/mongo-keyfile
+    volumes:
+      - ./scripts:/scripts
+      - mongodb_cluster_shard-2-tertiary_db:/data/db
+      - mongodb_cluster_shard-2-tertiary_config:/data/configdb
+    ports:
+      - 27025:27017
+
+  shard-3-primary:
+    image: mongo:latest
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile
+    container_name: shard-3-primary
+    command: mongod --port 27017 --shardsvr --replSet shard3 --bind_ip_all --keyFile /etc/mongo-keyfile
+    volumes:
+      - ./scripts:/scripts
+      - mongodb_cluster_shard-3-primary_db:/data/db
+      - mongodb_cluster_shard-3-primary_config:/data/configdb
+    ports:
+      - 27026:27017
+
+  shard-3-secondary:
+    image: mongo:latest
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile
+    container_name: shard-3-secondary
+    command: mongod --port 27017 --shardsvr --replSet shard3 --bind_ip_all --keyFile /etc/mongo-keyfile
+    volumes:
+      - ./scripts:/scripts
+      - mongodb_cluster_shard-3-secondary_db:/data/db
+      - mongodb_cluster_shard-3-secondary_config:/data/configdb
+    ports:
+      - 27027:27017
+
+  shard-3-tertiary:
+    image: mongo:latest
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile
+    container_name: shard-3-tertiary
+    command: mongod --port 27017 --shardsvr --replSet shard3 --bind_ip_all --keyFile /etc/mongo-keyfile
+    volumes:
+      - ./scripts:/scripts
+      - mongodb_cluster_shard-3-tertiary_db:/data/db
+      - mongodb_cluster_shard-3-tertiary_config:/data/configdb
+    ports:
+      - 27028:27017
 
   router:
     image: mongo:latest
@@ -71,18 +156,40 @@ services:
       - mongodb_cluster_router_config:/data/configdb
     depends_on:
       - config-server
-      - shard-primary
-      - shard-secondary
-      - shard-tertiary
+      - shard-1-primary
+      - shard-1-secondary
+      - shard-1-tertiary
+      - shard-2-primary
+      - shard-2-secondary
+      - shard-2-tertiary
+      - shard-3-primary
+      - shard-3-secondary
+      - shard-3-tertiary
 
 volumes:
-  mongodb_cluster_router_db:
-  mongodb_cluster_router_config:
   mongodb_cluster_config-server_db:
   mongodb_cluster_config-server_config:
-  mongodb_cluster_shard-primary_db:
-  mongodb_cluster_shard-primary_config:
-  mongodb_cluster_shard-secondary_db:
-  mongodb_cluster_shard-secondary_config:
-  mongodb_cluster_shard-tertiary_db:
-  mongodb_cluster_shard-tertiary_config:
+
+  mongodb_cluster_shard-1-primary_db:
+  mongodb_cluster_shard-1-primary_config:
+  mongodb_cluster_shard-1-secondary_db:
+  mongodb_cluster_shard-1-secondary_config:
+  mongodb_cluster_shard-1-tertiary_db:
+  mongodb_cluster_shard-1-tertiary_config:
+
+  mongodb_cluster_shard-2-primary_db:
+  mongodb_cluster_shard-2-primary_config:
+  mongodb_cluster_shard-2-secondary_db:
+  mongodb_cluster_shard-2-secondary_config:
+  mongodb_cluster_shard-2-tertiary_db:
+  mongodb_cluster_shard-2-tertiary_config:
+
+  mongodb_cluster_shard-3-primary_db:
+  mongodb_cluster_shard-3-primary_config:
+  mongodb_cluster_shard-3-secondary_db:
+  mongodb_cluster_shard-3-secondary_config:
+  mongodb_cluster_shard-3-tertiary_db:
+  mongodb_cluster_shard-3-tertiary_config:
+
+  mongodb_cluster_router_db:
+  mongodb_cluster_router_config:

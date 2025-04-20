@@ -55,19 +55,55 @@ echo "-------------------------------------------------"
 echo "Thread Sleeping For $SLEEP Seconds..."
 sleep $SLEEP
 
-# Initialize Shard Replica Set
-echo "Initializing Shard Replica Set..."
-docker exec -it shard-primary mongosh --eval '
+# Initialize Shard 1 Replica Set
+echo "Initializing Shard 1 Replica Set..."
+docker exec -it shard-1-primary mongosh --eval '
 rs.initiate({
-  _id: "shard-primary",
+  _id: "shard1",
   members: [
-    { _id: 0, host: "shard-primary:27017" },
-    { _id: 1, host: "shard-secondary:27017" },
-    { _id: 2, host: "shard-tertiary:27017" }
+    { _id: 0, host: "shard-1-primary:27017" },
+    { _id: 1, host: "shard-1-secondary:27017" },
+    { _id: 2, host: "shard-1-tertiary:27017" }
   ]
 });
 '
-echo "Shard Replica Set Initialized..."
+echo "Shard 1 Replica Set Initialized..."
+echo "-------------------------------------------------"
+
+echo "Thread Sleeping For $SLEEP Seconds..."
+sleep $SLEEP
+
+# Initialize Shard 2 Replica Set
+echo "Initializing Shard 2 Replica Set..."
+docker exec -it shard-2-primary mongosh --eval '
+rs.initiate({
+  _id: "shard2",
+  members: [
+    { _id: 0, host: "shard-2-primary:27017" },
+    { _id: 1, host: "shard-2-secondary:27017" },
+    { _id: 2, host: "shard-2-tertiary:27017" }
+  ]
+});
+'
+echo "Shard 2 Replica Set Initialized..."
+echo "-------------------------------------------------"
+
+echo "Thread Sleeping For $SLEEP Seconds..."
+sleep $SLEEP
+
+# Initialize Shard 3 Replica Set
+echo "Initializing Shard 3 Replica Set..."
+docker exec -it shard-3-primary mongosh --eval '
+rs.initiate({
+  _id: "shard3",
+  members: [
+    { _id: 0, host: "shard-3-primary:27017" },
+    { _id: 1, host: "shard-3-secondary:27017" },
+    { _id: 2, host: "shard-3-tertiary:27017" }
+  ]
+});
+'
+echo "Shard 3 Replica Set Initialized..."
 echo "-------------------------------------------------"
 
 # Wait for the Shard Replica Set to initialize
@@ -75,11 +111,24 @@ echo "Thread Sleeping For $SLEEP Seconds..."
 sleep $SLEEP
 
 # Add Shard to Router
-echo "Adding Shard to Router..."
+echo "Adding Shards to Router..."
+
+echo "Adding Shard 1 to Router"
 docker exec -it router mongosh --eval '
-sh.addShard("shard-primary/shard-primary:27017,shard-secondary:27017,shard-tertiary:27017");
+sh.addShard("shard1/shard-1-primary:27017,shard-1-secondary:27017,shard-1-tertiary:27017");
 '
-echo "Shard Added to Router..."
+
+echo "Adding Shard 2 to Router"
+docker exec -it router mongosh --eval '
+sh.addShard("shard2/shard-2-primary:27017,shard-2-secondary:27017,shard-2-tertiary:27017");
+'
+
+echo "Adding Shard 3 to Router"
+docker exec -it router mongosh --eval '
+sh.addShard("shard3/shard-3-primary:27017,shard-3-secondary:27017,shard-3-tertiary:27017");
+'
+
+echo "All Shards Added to Router..."
 echo "-------------------------------------------------"
 
 # Wait for the Shard to be added
@@ -100,6 +149,21 @@ echo "The Thread Will Now Sleep For $SLEEP Seconds Before The Data Are Imported"
 sleep $SLEEP
 echo "Creating Validation Schema For The Pokemon Dataset..."
 docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval 'use nosql_project;'
+
+echo "Enabling Sharding For Database 'nosql_project'..."
+docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval '
+sh.enableSharding("nosql_project");
+'
+
+docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval '
+sh.setBalancerState(true);
+'
+
+echo "Sharding The 'pokemon' Collection On '#'"
+docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval '
+sh.shardCollection("nosql_project.pokemon", { "#": 1 });
+'
+
 docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval 'db.getSiblingDB("nosql_project").pokemon.insertOne({ test: "data" });'
 docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval '
 db.getSiblingDB("nosql_project").runCommand({
@@ -149,6 +213,12 @@ echo "Pokemon Data Imported Into The Database"
 echo "The Thread Will Now Sleep For $SLEEP Seconds"
 
 echo "Creating Validation Schema For The Video Games Sales Dataset..."
+
+echo "Sharding The 'games' Collection On 'Rank'"
+docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval '
+sh.shardCollection("nosql_project.games", { "Rank": 1 });
+'
+
 docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval 'db.getSiblingDB("nosql_project").games.insertOne({ test: "data" });'
 docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval '
 db.getSiblingDB("nosql_project").runCommand({
@@ -194,6 +264,12 @@ echo "Video Games Data Imported Into The Database"
 echo "The Thread Will Now Sleep For $SLEEP Seconds"
 
 echo "Creating Validation Schema For The Healthcare Dataset..."
+
+echo "Sharding The 'healthcare' Collection On 'Name'"
+docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval '
+sh.shardCollection("nosql_project.healthcare", { "Name": 1 });
+'
+
 docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval 'db.getSiblingDB("nosql_project").healthcare.insertOne({ test: "data" });'
 docker exec -it router mongosh --authenticationDatabase admin -u admin -p password --eval '
 db.getSiblingDB("nosql_project").runCommand({
